@@ -3,7 +3,7 @@ import { Platform, StyleSheet, View, Text } from 'react-native';
 
 export default function HomeScreen() {
   return (
-    <View style={styles.container}>
+    <View className="flex-1 justify-center">
       <Text>Hello World</Text>
     </View>
   );
