@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const Test = () => {
+const NatureMeditate = () => {
   return (
     <View className='flex-1 justify-center items-center'>
-      <Text>Test</Text>
+      <Text>NatureMeditate</Text>
     </View>
   )
 }
 
-export default Test
+export default NatureMeditate
