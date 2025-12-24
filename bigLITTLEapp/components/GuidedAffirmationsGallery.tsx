@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, FlatList, Pressable, Image } from 'react-native';
-import { Link } from 'expo-router';
 import { GalleryPreviewData } from '@/constants/AffirmationCategory';
+import { Link } from 'expo-router';
+import React from 'react';
+import { FlatList, Image, Pressable, Text, View } from 'react-native';
 
 const GuidedAffirmationsGallery = ({ title, previews }: { title: string; previews: GalleryPreviewData[] }) => {
   return (
@@ -16,7 +16,7 @@ const GuidedAffirmationsGallery = ({ title, previews }: { title: string; preview
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <Link
-                href={{ pathname: "/affirmations", params: { id: item.id.toString() } }}
+                href={`/affirmations/${item.id}`}
                 asChild
             >
               <Pressable>
