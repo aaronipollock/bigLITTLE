@@ -3,6 +3,7 @@ import { Slot, SplashScreen, Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
+import TimerProvider from "@/context/TimerContext";
 
 // This will prevent the splash screen from auto hiding until loading all the font assets
 SplashScreen.preventAutoHideAsync();
@@ -21,7 +22,7 @@ export default function RootLayout() {
   if (!fontsLoaded && !error) return null;
 
   return (
-    <SafeAreaProvider>
+    <TimerProvider>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -29,7 +30,11 @@ export default function RootLayout() {
           name="meditate/[id]"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="(modal)/adjust-meditation-duration"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
       </Stack>
-    </SafeAreaProvider>
+    </TimerProvider>
   );
 }
