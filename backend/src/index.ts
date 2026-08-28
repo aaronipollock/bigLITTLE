@@ -5,6 +5,7 @@ import { config } from './config';
 import { logger } from './logger';
 import { requestLogger } from './middleware/requestLogger';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
+import authRoutes from './routes/auth';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/health', (_req, res) => {
     return res.status(200).json({ status: 'ok' });
 });
 
+app.use("/auth", authRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
