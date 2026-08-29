@@ -4,6 +4,7 @@ import { z } from "zod";
 import { hashPassword, signToken, verifyPassword } from "../auth";
 import { query } from "../db";
 import { UnauthorizedError } from "../errors";
+import { requireAuth } from "../middleware/requireAuth";
 
 const router = express.Router();
 
@@ -60,5 +61,26 @@ router.post("/login", asyncHandler(async (req, res) => {
         caregiver: { id: Number(caregiver.id), email },
     })
 }))
+
+router.get("/me", requireAuth, asyncHandler(async (req, res) => {
+    const result = await query<{ id: string; email: string; created_at: Date }>(
+        `SELECT id, email, created_at FROM caregivers WHERE id = $1`,
+        [req.caregiverId]
+    );
+
+    const caregiver = result.rows[0];
+
+    if (!caregiver) {
+        throw new UnauthorizedError("Caregiver no longer exists");
+    }
+
+    res.status(200).json({
+        caregiver: {
+            id: Number(caregiver.id),
+            email: caregiver.email,
+            createdAt: caregiver.created_at,
+        },
+    });
+}));
 
 export default router;
