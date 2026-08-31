@@ -36,7 +36,8 @@ Requires Node 20+ and PostgreSQL.
 createdb biglittle_dev
 cd backend
 psql -d biglittle_dev -f db/schema.sql
-cp .env.example .env      # then set JWT_SECRET, e.g. `openssl rand -hex 32`
+cp .env.example .env      # then set JWT_SECRET to a 32+ char random string
+openssl rand -hex 32      # generates one
 npm install
 npm run dev               # starts on PORT, default 3000
 ```
