@@ -2,7 +2,7 @@
 
 A meditation app with an Expo / React Native client (`bigLITTLEapp/`) and a REST API backend (`backend/`) built on Express, PostgreSQL, and TypeScript, using JWT authentication with bcrypt password hashing.
 
-This is a personal project in progress. The API runs locally against a local Postgres database. The client and the API are not yet connected.
+This is a personal project in progress. The API runs locally against a local Postgres database. The app's login screen authenticates against the API and stores the returned token in the device keychain. The signup screen and the rest of the app are not yet wired to it, and meditation content is still bundled with the app.
 
 ## Troubleshooting write-ups
 
@@ -58,4 +58,6 @@ npm install
 npx expo start
 ```
 
-Expo SDK 54 with expo-router for file-based routing and NativeWind for styling. Meditation content is currently bundled with the app rather than served by the API.
+Run `npm` and `expo` commands from inside `bigLITTLEapp/`. There is no package.json at the repo root, and npm resolves one by searching upward, so running them from the root installs into whatever project it finds above this directory.
+
+Expo SDK 54 with expo-router for file-based routing and NativeWind for styling. The API base URL is derived at runtime in `constants/api.ts` from the Expo dev server host, so the app reaches the API from a physical device rather than assuming `localhost`.
