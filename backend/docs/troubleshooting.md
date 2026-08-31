@@ -6,7 +6,7 @@ Running record of issues found in this backend, their root causes, and how each 
 
 ## 2026-08-07 — Bearer tokens written to logs in plain text
 
-**Symptom.** Every request header was being written to the application log, including `Authorization`. Once auth routes exist, that means live bearer tokens land in log files, which are shipped to aggregators and retained for months.
+**Symptom.** Every request header was being written to the application log, including `Authorization`. Once auth routes exist, that means live bearer tokens are written to the log stream. This project currently logs to stdout in development, but anywhere logs are persisted or forwarded, a token in them is a working credential sitting wherever those logs end up.
 
 **Reproduction.**
 
