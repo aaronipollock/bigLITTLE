@@ -1,6 +1,7 @@
 import { View, Text, ImageBackground } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState} from 'react'
 import { StatusBar } from "expo-status-bar";
+import * as SecureStore from 'expo-secure-store';
 
 import beachImage from "@/assets/meditation-images/beach.webp";
 import CustomButton from '@/components/CustomButton'
@@ -9,6 +10,20 @@ import AppGradient from '@/components/AppGradient';
 
 const App = () => {
   const router = useRouter();
+
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    SecureStore.getItemAsync("token").then((token) => {
+      if (token) {
+        router.replace("/nature-meditate");
+      } else {
+        setChecking(false);
+      }
+    })
+  }, []);
+
+  if (checking) return null;
 
   return (
     <View className='flex-1'>

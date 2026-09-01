@@ -10,8 +10,11 @@ declare global {
     }
 }
 
-export const requireAuth = (req: Request, _res: Response, next: NextFunction) => {
-
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    // Responses to authenticated requests carry user-specific data and
+    // should not be stored by a client or any intermediary cache
+    res.set("Cache-Control", "no-store");
+    
     const header = req.header("authorization");
 
     if (header && header.startsWith("Bearer ")) {

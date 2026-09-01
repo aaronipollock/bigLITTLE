@@ -84,7 +84,7 @@ const Signup = () => {
               secureTextEntry
               className='bg-white/90 rounded-xl px-4 min-h-[52px] text-lg'
             />
-            <View className='min-h-[28px] mt-4'>
+            <View className='min-h-[52px] mt-4'>
               {error && (
               <Text className='text-red-300 text-center text-base'>
                 {error}
