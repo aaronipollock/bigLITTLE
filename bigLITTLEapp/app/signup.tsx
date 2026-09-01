@@ -1,7 +1,9 @@
-import { View, Text, ImageBackground } from 'react-native'
-import React from 'react'
+import { View, Text, ImageBackground, TextInput } from 'react-native'
+import React, { useState } from 'react'
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { API_URL } from '@/constants/api';
 
 import beachImage from "@/assets/meditation-images/beach.webp";
 import CustomButton from '@/components/CustomButton'
@@ -9,6 +11,43 @@ import AppGradient from '@/components/AppGradient';
 
 const Signup = () => {
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false);
+
+  const messageFor = (status: number, data: any) => {
+    if (status === 409) return "An account with that email already exists.";
+    if (status === 400) return "Enter a valid email and password of at least 8 characters.";
+    return data.error?.message ?? "Something went wrong";
+  };
+
+  const handleSignup = async () => {
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(messageFor(response.status, data));
+        return;
+      }
+
+      await SecureStore.setItemAsync("token", data.token);
+      router.replace("/nature-meditate");
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <View className='flex-1'>
@@ -23,10 +62,40 @@ const Signup = () => {
               Sign up
             </Text>
           </View>
+          <View className='px-5'>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor="#9ca3af"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              className='bg-white/90 rounded-xl px-4 min-h-[52px] mb-4 text-lg'
+            />
+
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password (8+ characters)"
+              placeholderTextColor="#9ca3af"
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry
+              className='bg-white/90 rounded-xl px-4 min-h-[52px] text-lg'
+            />
+            <View className='min-h-[28px] mt-4'>
+              {error && (
+              <Text className='text-red-300 text-center text-base'>
+                {error}
+              </Text>
+              )}
+            </View>
+          </View>
           <View>
             <CustomButton
-              onPress={() => router.push("/nature-meditate")}
-              title='Continue'
+              onPress={handleSignup}
+              title={submitting ? 'Creating account...' : 'Continue'}
               containerStyles='w-85 min-h-[52px] px-6 ml-5 mr-5'
               textStyles='text-xl'
             />
