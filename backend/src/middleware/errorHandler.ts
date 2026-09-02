@@ -17,6 +17,11 @@ export const errorHandler = (
     res: Response,
     _next: NextFunction
 ) => {
+
+    const pgCode = err && typeof err === "object" && "code" in err
+        ? (err as { code?: string }).code
+        : undefined;
+
     if (err instanceof ApiError) {
         return res.status(err.status).json({
             error: {
@@ -42,6 +47,20 @@ export const errorHandler = (
             error: {
                 code: "CONFLICT",
                 message: "Request conflict with the current state of the target resource."
+            }
+        })
+    } else if (pgCode === "23505") {
+        return res.status(409).json({
+            error: {
+                code: "CONFLICT",
+                message: "request conflict with the current state of the target resource."
+            }
+        })
+    } else if (pgCode === "23503") {
+        return res.status(400).json({
+            error: {
+                code: "INVALID_REFERENCE",
+                message: "A referenced record does not exist."
             }
         })
     } else {

@@ -6,6 +6,8 @@ import { logger } from './logger';
 import { requestLogger } from './middleware/requestLogger';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
+import meditationRoutes from './routes/meditations';
+import usageEventRoutes from './routes/usageEvents';
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.get('/health', (_req, res) => {
 });
 
 app.use("/auth", authRoutes);
+app.use("/meditations", meditationRoutes);
+app.use("/usage-events", usageEventRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
