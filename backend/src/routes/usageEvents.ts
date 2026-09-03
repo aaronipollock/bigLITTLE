@@ -15,6 +15,10 @@ const usageEventSchema = z.object({
     childProfileLabel: z.string().trim().max(100).optional(),
 });
 
+const historyQuerySchema = z.object({
+    limit: z.coerce.number().int().positive().max(100).default(50),
+});
+
 router.post("/", asyncHandler(async (req, res) => {
     const { clientEventId, meditationId, childProfileLabel } =
         usageEventSchema.parse(req.body);
@@ -53,6 +57,41 @@ router.post("/", asyncHandler(async (req, res) => {
     const row = existing.rows[0];
     res.status(200).json({
         usageEvent: { id: Number(row.id), playedAtUtc: row.played_at_utc },
+    });
+}));
+
+
+router.get("/", asyncHandler(async (req, res) => {
+    const { limit } = historyQuerySchema.parse(req.query);
+
+    const result = await query<{
+        id: string;
+        meditation_id: string;
+        title: string;
+        child_profile_label: string | null;
+        played_at_utc: Date;
+    }>(
+        `SELECT ue.id,
+                ue.meditation_id,
+                m.title,
+                ue.child_profile_label,
+                ue.played_at_utc
+         FROM usage_events ue
+         JOIN meditations m ON m.id = ue.meditation_id
+         WHERE ue.caregiver_id = $1
+         ORDER BY ue.played_at_utc DESC
+         LIMIT $2`,
+        [req.caregiverId, limit]
+    );
+
+    res.status(200).json({
+        usageEvents: result.rows.map((row) => ({
+            id: Number(row.id),
+            meditationId: Number(row.meditation_id),
+            meditationTitle: row.title,
+            childProfileLabel: row.child_profile_label,
+            playedAtUtc: row.played_at_utc,
+        })),
     });
 }));
 
