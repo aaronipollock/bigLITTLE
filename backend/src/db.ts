@@ -3,6 +3,10 @@ import { config } from './config';
 
 // A pool keeps a handful of database connections open and lends them out
 // per query. Opening a fresh TCP connection per request would be far too slow.
+// TLS is controlled by the connection string, not by code. `pg` parses an
+// `sslmode` query parameter out of DATABASE_URL, so a managed database uses
+// e.g. `...?sslmode=no-verify` while local Postgres omits it entirely.
+// Keeping this in the environment means the same build runs everywhere.
 export const pool = new Pool({
   connectionString: config.DATABASE_URL,
 });

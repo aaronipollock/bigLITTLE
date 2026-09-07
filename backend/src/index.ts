@@ -13,6 +13,9 @@ const app = express();
 
 app.use(requestLogger);
 app.use(helmet());
+// The only client today is a native app, which does not enforce CORS at all,
+// so a permissive origin costs nothing here. Replace with an explicit
+// allowlist (`cors({ origin: [...] })`) before any browser client exists.
 app.use(cors());
 app.use(express.json());
 
