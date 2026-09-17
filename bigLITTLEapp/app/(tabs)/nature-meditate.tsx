@@ -6,16 +6,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '@/constants/api';
 
-import { MEDITATION_DATA } from '@/constants/MeditationData';
-import MEDITATION_IMAGES from '@/constants/meditation-images';
+import { MEDITATION_IMAGES } from '@/constants/meditation-images';
 import { router } from 'expo-router';
+
+type Meditation = {
+  id: number;
+  title: string;
+  description: string | null;
+  category: string;
+  durationSeconds: number;
+  audioKey: string;
+};
 
 const NatureMeditate = () => {
 
   const [email, setEmail] = useState<string | null>(null);
+  const [meditations, setMeditations] = useState<Meditation[]>([]);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    const loadCaregiver = async () => {
+    const load = async () => {
       const token = await SecureStore.getItemAsync("token");
 
       if (!token) {
@@ -23,26 +33,42 @@ const NatureMeditate = () => {
         return;
       }
 
-      try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      const headers = { Authorization: `Bearer ${token}` };
 
-        if (response.status === 401) {
+      try {
+        // Independent requests, so issue them together rather than in series.
+        const [meResponse, meditationsResponse] = await Promise.all([
+          fetch(`${API_URL}/auth/me`, { headers }),
+          fetch(`${API_URL}/meditations`, { headers }),
+        ]);
+
+        // Either one returning 401 means the token is dead, not that one
+        // endpoint is unhappy.
+        if (meResponse.status === 401 || meditationsResponse.status === 401) {
           await SecureStore.deleteItemAsync("token");
           router.replace("/");
           return;
         }
 
-        const data = await response.json();
-        setEmail(data.caregiver.email);
-      } catch {
-        // Network failure. Leave the greeting generic rather than
-        // signing the user out over a temporary connectivity problem.
+        if (!meResponse.ok || !meditationsResponse.ok) {
+          setLoadError(true);
+          return;
+        }
+
+        const meData = await meResponse.json();
+        const meditationsData = await meditationsResponse.json();
+
+        setEmail(meData.caregiver.email);
+        setMeditations(meditationsData.meditations);
+      } catch (err) {
+        // The list cannot be rendered from anything local, so unlike the
+        // greeting this failure has to be visible to the user.
+        console.warn("Could not load meditations", err);
+        setLoadError(true);
       }
     };
 
-    loadCaregiver();
+    load();
   }, [])
 
   const handleLogout = async () => {
@@ -66,17 +92,29 @@ const NatureMeditate = () => {
         </View>
         <View>
           <FlatList
-            data={MEDITATION_DATA}
+            data={meditations}
             className="mb-20"
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <Text className="text-indigo-100 text-lg text-center mt-8">
+                {loadError
+                  ? "Could not load meditations. Check your connection and try again."
+                  : "Loading..."}
+              </Text>
+            }
             renderItem={({ item }) => (
               <Pressable
-                onPress={() => router.push(`/meditate/${item.id}`)}
+                onPress={() =>
+                  router.push({
+                    pathname: "/meditate/[id]",
+                    params: { id: String(item.id), audioKey: item.audioKey },
+                  })
+                }
                 className="h-48 my-3 rounded-md overflow-hidden"
               >
                 <ImageBackground
-                  source={MEDITATION_IMAGES[item.id - 1]}
+                  source={MEDITATION_IMAGES[item.audioKey]}
                   resizeMode="cover"
                   className="flex-1 rounded-lg justify-center"
                 >

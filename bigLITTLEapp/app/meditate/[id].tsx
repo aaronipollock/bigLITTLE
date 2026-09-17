@@ -3,15 +3,17 @@ import React, { useContext, useEffect, useState } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Audio } from 'expo-av';
 
-import MEDITATION_IMAGES from '@/constants/meditation-images'
+import { MEDITATION_IMAGES } from '@/constants/meditation-images'
 import AppGradient from '@/components/AppGradient'
 import { router, useLocalSearchParams } from 'expo-router'
 import CustomButton from '@/components/CustomButton';
-import { MEDITATION_DATA, AUDIO_FILES } from '@/constants/MeditationData';
+import { AUDIO_FILES } from '@/constants/MeditationData';
 import { TimerContext } from '@/context/TimerContext';
 
 const Meditate = () => {
-  const { id } = useLocalSearchParams();
+  // audioKey is passed from the list screen, which already has it from the
+  // API, so this screen does not need a second request to look it up.
+  const { audioKey } = useLocalSearchParams<{ id: string; audioKey: string }>();
 
   const { duration: secondsRemaining, setDuration } =
     useContext(TimerContext);
@@ -71,10 +73,8 @@ const Meditate = () => {
   }
 
   const initializeSound = async () => {
-    const audioFileName = MEDITATION_DATA[Number(id) - 1].audio;
-
     const { sound } = await Audio.Sound.createAsync(
-      AUDIO_FILES[audioFileName]
+      AUDIO_FILES[audioKey]
     );
 
     setSound(sound);
@@ -93,7 +93,7 @@ const Meditate = () => {
   return (
     <View className='flex-1'>
       <ImageBackground
-        source={MEDITATION_IMAGES[Number(id) - 1]}
+        source={MEDITATION_IMAGES[audioKey]}
         resizeMode="cover"
         className='flex-1'
       >
