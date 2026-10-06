@@ -27,3 +27,44 @@ This is documented, intentional behavior rather than a defect. Pino documents th
 **Verification.** Re-ran the identical curl command. Server log now shows `"authorization": "[Redacted]"`, with other headers unaffected.
 
 **Note.** This is log hygiene only — the token is still present in memory and on the wire. Hyphenated header names need bracket notation in redact paths (e.g. `req.headers["set-cookie"]`).
+
+---
+
+## 2026-10-05 — Production build cannot find `tsc`
+
+**Symptom.** The planned Render build command, `npm install && npm run build`, fails when `NODE_ENV=production` is set in the service's environment. The install step reports success; the build step then fails with:
+
+```
+sh: tsc: command not found
+```
+
+**Scope.** Caught before the first deploy by reproducing Render's build locally, so no deploy ever failed. The local build had always passed because `NODE_ENV` is unset in development.
+
+**Reproduction.** In a clean copy of `backend/` (no `node_modules`):
+
+```
+NODE_ENV=production npm install
+ls node_modules/.bin/tsc      # No such file or directory
+NODE_ENV=production npm run build
+```
+
+`npm install` printed `added 117 packages` and gave no warning. The full install is 154 packages; the missing ones are the devDependencies.
+
+**Root cause.** Two separate behaviors combine.
+
+1. Render passes a service's environment variables to the build step as well as the running process. `NODE_ENV=production` is meant for runtime, but the build sees it too.
+2. npm's `omit` config defaults to `dev` when `NODE_ENV=production`. With npm 10.9.2, `NODE_ENV=production npm config get omit` prints `dev`, and with `NODE_ENV` unset it prints nothing. So `npm install` silently skips devDependencies.
+
+`typescript` is a devDependency, which is correct: it is only needed to compile, not to run `dist/`. But this build compiles on the server, so it needs devDependencies at build time. The failure shows up one step after its cause: install reports success, and the error appears in the build step.
+
+**Fix.** Changed the Render build command to:
+
+```
+npm ci --include=dev && npm run build
+```
+
+`--include=dev` overrides the omit default. `npm ci` installs exactly what `package-lock.json` specifies, so the server builds the same dependency tree that was tested locally. `NODE_ENV=production` stays set, and it still applies at runtime.
+
+**Verification.** Locally, the same clean copy with `NODE_ENV=production` set installed 154 packages, built, booted with `npm start`, and returned `{"status":"ok"}` from `/health`. On Render, the first deploy (commit `87bcbdc`) logged `npm ci --include=dev` adding 153 packages (one fewer than on macOS because `fsevents` is a macOS-only optional dependency), `tsc` completing, and `Build successful`. The live service then passed its health checks.
+
+**Note.** Any server-side build step that depends on devDependencies (bundlers, type generators, etc.) hits the same issue on any host that applies runtime environment variables to builds. Where `NODE_ENV` is set matters as much as what it is set to.
