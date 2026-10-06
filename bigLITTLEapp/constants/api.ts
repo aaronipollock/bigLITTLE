@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 
 // Set this after the API is deployed. It is the address a shipped build uses.
-const PRODUCTION_API_URL = "https://REPLACE-ME.onrender.com";
+const PRODUCTION_API_URL = "https://biglittle.onrender.com";
 
 // `localhost` means different things depending on where the app runs.
 // On the iOS simulator it is the Mac, so localhost works. On a physical
