@@ -1,0 +1,30 @@
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import { requestLogger } from './middleware/requestLogger';
+import { notFoundHandler, errorHandler } from './middleware/errorHandler';
+import authRoutes from './routes/auth';
+import meditationRoutes from './routes/meditations';
+import usageEventRoutes from './routes/usageEvents';
+
+const app = express();
+
+app.use(requestLogger);
+app.use(helmet());
+// The only client today is a native app, which does not enforce CORS at all,
+// so a permissive origin costs nothing here. Replace with an explicit
+// allowlist (`cors({ origin: [...] })`) before any browser client exists.
+app.use(cors());
+app.use(express.json());
+
+app.get('/health', (_req, res) => {
+    return res.status(200).json({ status: 'ok' });
+});
+
+app.use("/auth", authRoutes);
+app.use("/meditations", meditationRoutes);
+app.use("/usage-events", usageEventRoutes);
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+export default app;
